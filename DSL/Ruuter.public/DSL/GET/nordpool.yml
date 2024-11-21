@@ -1,0 +1,8 @@
+get_price:
+  call: http.get
+  args:
+    url: https://dashboard.elering.ee/api/nps/price/EE/current
+  result: price
+
+return_value:
+  return: ${"Hetkel on NordPool elektribörsi hind " + price.response.body.data[0].price + " €/MWh. Börsipaketiga kliendi jaoks koosneb arvel nähtav elektri hind tarbimise hetke börsihinnast koos käibemaksuga ning sellele lisanduvast marginaalist, mis katab elektrimüüja riskid ja tegutsemiskulud. Hinnale lisanduvad veel võrgutasu ja riiklikud maksud (taastuvenergia ja elektriaktsiis)."}

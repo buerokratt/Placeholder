@@ -1,0 +1,68 @@
+variables_step:
+  assign:
+    year: 2023
+    month: ${new Date().getMonth()}
+    divided: ${(month + 3) / 3}
+    quarter: 1
+    year_quarter: ${year + "Q" + quarter}
+
+post_step:
+  call: http.post
+  args:
+    url: https://andmed.stat.ee/api/v1/et/stat/TT0151
+    body:
+      query:
+        - code: "Näitaja"
+          selection:
+            filter: "item"
+            values:
+              - "UNEMP_RATE"
+        - code: "Sugu"
+          selection:
+            filter: "item"
+            values:
+              - "T"
+        - code: "Vanuserühm"
+          selection:
+            filter: "item"
+            values:
+              - "Y15-74"
+        - code: "Vaatlusperiood"
+          selection:
+            filter: "item"
+            values:
+              - ${year_quarter}
+      response:
+        format: "json-stat2"
+  result: unemployment
+  next: check_results
+
+check_results:
+  switch:
+    - condition: ${unemployment.response.body.value[0] === undefined}
+      next: check_quarter_step
+    - condition: ${unemployment.response.body.value[0] != null}
+      next: return_step
+
+check_quarter_step:
+  switch:
+    - condition: ${quarter == 1}
+      next: last_year_step
+    - condition: ${quarter != 1}
+      next: subtraction_step
+
+last_year_step:
+  assign:
+    year: ${year - 1}
+    quarter: 4
+    year_quarter: ${year + "Q" + quarter}
+  next: post_step
+
+subtraction_step:
+  assign:
+    quarter: ${quarter - 1}
+    year_quarter: ${year + "Q" + quarter}
+  next: post_step
+
+return_step:
+  return: ${"Töötuse määr Eestis " + year + " " + quarter + ". kvartalis oli " + unemployment.response.body.value[0] + "%"}
