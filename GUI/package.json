@@ -34,7 +34,7 @@
     "date-fns": "^2.29.3",
     "downshift": "^7.0.5",
     "esbuild": "^0.19.5",
-    "framer-motion": "^8.5.5",
+    "framer-motion": "^11.3.4",
     "howler": "^2.2.4",
     "i18next": "^22.4.5",
     "i18next-browser-languagedetector": "^7.0.1",
