@@ -48,7 +48,7 @@
     "react-datepicker": "^4.8.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.41.5",
-    "react-i18next": "^12.1.1",
+    "react-i18next": "^15.0.0",
     "react-icons": "^4.10.1",
     "react-idle-timer": "^5.5.2",
     "react-modal": "^3.16.1",
