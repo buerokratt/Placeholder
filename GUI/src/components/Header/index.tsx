@@ -27,17 +27,12 @@ import { AUTHORITY } from 'types/authorities';
 import { useCookies } from 'react-cookie';
 import { useDing } from 'hooks/useAudio';
 import './Header.scss';
+import { CustomerSupportActivityDTO } from 'types/customerSupportActivity';
 
 type CustomerSupportActivity = {
   idCode: string;
   active: true;
   status: string;
-};
-
-type CustomerSupportActivityDTO = {
-  customerSupportActive: boolean;
-  customerSupportStatus: 'offline' | 'idle' | 'online';
-  customerSupportId: string;
 };
 
 const statusColors: Record<string, string> = {

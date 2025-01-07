@@ -1,24 +1,34 @@
-import {FC, useEffect, useMemo, useState} from 'react';
-import {useTranslation} from 'react-i18next';
-import {useMutation} from '@tanstack/react-query';
-import {ColumnFiltersState, createColumnHelper, PaginationState, Row, SortingState,} from '@tanstack/react-table';
-import {AxiosError} from 'axios';
-import {MdOutlineDeleteOutline, MdOutlineEdit} from 'react-icons/md';
-import {apiDev} from 'services/api';
-import {Button, Card, DataTable, Dialog, Icon, Track} from 'components';
-import {User, UserSearchFilters} from 'types/user';
-import {deleteUser} from 'services/users';
-import {useToast} from 'hooks/useToast';
+import { FC, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  ColumnFiltersState,
+  PaginationState,
+  Row,
+  SortingState,
+  createColumnHelper,
+} from '@tanstack/react-table';
+import { AxiosError } from 'axios';
+import { MdOutlineEdit, MdOutlineDeleteOutline } from 'react-icons/md';
+import { apiDev } from 'services/api';
+import { Button, Card, DataTable, Dialog, Icon, Track } from 'components';
+import { User, UserSearchFilters } from 'types/user';
+import { deleteUser } from 'services/users';
+import { useToast } from 'hooks/useToast';
 import UserModal from './UserModal';
-import {ROLES} from 'utils/constants';
+import { ROLES } from 'utils/constants';
 import withAuthorization from 'hoc/with-authorization';
-import useStore from "../../../store";
+import { CustomerSupportActivityDTO } from 'types/customerSupportActivity';
+import useStore from '../../../store';
 
 const SettingsUsers: FC = () => {
   const { t } = useTranslation();
   const toast = useToast();
+  const queryClient = useQueryClient();
+
   const userInfo = useStore((state) => state.userInfo);
   const [newUserModal, setNewUserModal] = useState(false);
+  const [changeStatusDialog, setChangeStatusDialog] = useState(false);
   const [editableRow, setEditableRow] = useState<User | null>(null);
   const [deletableRow, setDeletableRow] = useState<string | number | null>(
     null
@@ -26,7 +36,12 @@ const SettingsUsers: FC = () => {
   const [usersList, setUsersList] = useState<User[] | null>(null);
   const [totalPages, setTotalPages] = useState<number>(1);
 
-  const getUsers = (pagination: PaginationState, sorting: SortingState, columnFilters: ColumnFiltersState, setTablePagination: boolean = false) => {
+  const getUsers = (
+    pagination: PaginationState,
+    sorting: SortingState,
+    columnFilters: ColumnFiltersState,
+    setTablePagination: boolean = false
+  ) => {
     const sort =
       sorting.length === 0
         ? 'name asc'
@@ -55,12 +70,12 @@ const SettingsUsers: FC = () => {
   };
 
   useEffect(() => {
-      getUsers(pagination, sorting, columnFilters);
+    getUsers(pagination, sorting, columnFilters);
   }, []);
 
-    useEffect(() => {
-        fetchData()
-    }, [userInfo?.idCode]);
+  useEffect(() => {
+    fetchData();
+  }, [userInfo?.idCode]);
 
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -70,38 +85,39 @@ const SettingsUsers: FC = () => {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const columnHelper = createColumnHelper<User>();
 
-    const fetchData = async () => {
-        try {
-            const response = await apiDev.get('/accounts/get-page-preference', {
-                params: {user_id: userInfo?.idCode, page_name: window.location.pathname},
-            });
-            if (response.data.pageResults !== undefined) {
-                updatePagePreference(response.data.pageResults)
-            } else {
-                getUsers(pagination, sorting, columnFilters);
-            }
-        } catch (err) {
-            console.error('Failed to fetch data');
-        }
-    };
-
-    const updatePagePreference = (pageResults: number): void => {
-        const updatedPagination = { ...pagination, pageSize: pageResults };
-        setPagination(updatedPagination);
-        getUsers(updatedPagination, sorting, columnFilters);
+  const fetchData = async () => {
+    try {
+      const response = await apiDev.get('/accounts/get-page-preference', {
+        params: {
+          user_id: userInfo?.idCode,
+          page_name: window.location.pathname,
+        },
+      });
+      if (response.data.pageResults !== undefined) {
+        updatePagePreference(response.data.pageResults);
+      } else {
+        getUsers(pagination, sorting, columnFilters);
+      }
+    } catch (err) {
+      console.error('Failed to fetch data');
     }
+  };
 
-    const updatePageSize = useMutation({
-        mutationFn: (data: {
-            page_results: number;
-        }) => {
-            return apiDev.post('accounts/update-page-preference', {
-                user_id: userInfo?.idCode,
-                page_name: window.location.pathname,
-                page_results: data.page_results,
-            });
-        }
-    });
+  const updatePagePreference = (pageResults: number): void => {
+    const updatedPagination = { ...pagination, pageSize: pageResults };
+    setPagination(updatedPagination);
+    getUsers(updatedPagination, sorting, columnFilters);
+  };
+
+  const updatePageSize = useMutation({
+    mutationFn: (data: { page_results: number }) => {
+      return apiDev.post('accounts/update-page-preference', {
+        user_id: userInfo?.idCode,
+        page_name: window.location.pathname,
+        page_results: data.page_results,
+      });
+    },
+  });
 
   const deleteUserMutation = useMutation({
     mutationFn: ({ id }: { id: string | number }) => deleteUser(id),
@@ -115,6 +131,34 @@ const SettingsUsers: FC = () => {
       setDeletableRow(null);
     },
     onError: (error: AxiosError) => {
+      toast.open({
+        type: 'error',
+        title: t('global.notificationError'),
+        message: error.message,
+      });
+    },
+  });
+
+  const customerSupportActivityMutation = useMutation({
+    mutationFn: (data: CustomerSupportActivityDTO) =>
+      apiDev.post('accounts/customer-support-activity', {
+        customerSupportActive: data.customerSupportActive,
+        customerSupportStatus: data.customerSupportStatus,
+      }),
+    onSuccess: async () => {
+      getUsers(pagination, sorting, columnFilters);
+      toast.open({
+        type: 'success',
+        title: t('global.notification'),
+        message: t('toast.success.userUpdated'),
+      });
+      setChangeStatusDialog(false);
+    },
+    onError: async (error: AxiosError) => {
+      await queryClient.invalidateQueries([
+        'accounts/customer-support-activity',
+        'prod',
+      ]);
       toast.open({
         type: 'error',
         title: t('global.notificationError'),
@@ -152,47 +196,59 @@ const SettingsUsers: FC = () => {
       search_csa_email: '',
       search_authority: '',
     };
-     for (const filter of state) {
-       switch (filter.id) {
-         case 'name':
-           searchfilters.search_full_name = (filter.value as string) ?? '';
-           break;
-         case 'idCode':
-           searchfilters.search_id_code = (filter.value as string) ?? '';
-           break;
-         case 'displayName':
-           searchfilters.search_display_name = (filter.value as string) ?? '';
-           break;
-         case 'csaTitle':
-           searchfilters.search_csa_title = (filter.value as string) ?? '';
-           break;
-         case 'csaEmail':
-           searchfilters.search_csa_email = (filter.value as string) ?? '';
-           break;
-         case 'Role':
-           searchfilters.search_authority = (filter.value as string) ?? '';
-           break;
-         default:
-           break;
-       }
-     }
-     return searchfilters;
-  }
+    for (const filter of state) {
+      switch (filter.id) {
+        case 'name':
+          searchfilters.search_full_name = (filter.value as string) ?? '';
+          break;
+        case 'idCode':
+          searchfilters.search_id_code = (filter.value as string) ?? '';
+          break;
+        case 'displayName':
+          searchfilters.search_display_name = (filter.value as string) ?? '';
+          break;
+        case 'csaTitle':
+          searchfilters.search_csa_title = (filter.value as string) ?? '';
+          break;
+        case 'csaEmail':
+          searchfilters.search_csa_email = (filter.value as string) ?? '';
+          break;
+        case 'Role':
+          searchfilters.search_authority = (filter.value as string) ?? '';
+          break;
+        default:
+          break;
+      }
+    }
+    return searchfilters;
+  };
 
   const customerSupportStatusView = (props: any) => {
     const isIdle = props.getValue() === 'idle' ? '#FFB511' : '#D73E3E';
     return (
-      <span
-        style={{
-          marginLeft: 'auto',
-          marginRight: 'auto',
-          display: 'block',
-          width: 16,
-          height: 16,
-          borderRadius: '50%',
-          backgroundColor: props.getValue() === 'online' ? '#308653' : isIdle,
+      <Button
+        appearance="text"
+        onClick={() => {
+          if (props.getValue() === 'online' || props.getValue() === 'idle')
+            setChangeStatusDialog(true);
         }}
-      ></span>
+        style={{
+          borderRadius: '50%',
+          color: 'white',
+        }}
+      >
+        <span
+          style={{
+            marginLeft: 'auto',
+            marginRight: 'auto',
+            display: 'block',
+            width: 16,
+            height: 16,
+            borderRadius: '50%',
+            backgroundColor: props.getValue() === 'online' ? '#308653' : isIdle,
+          }}
+        ></span>
+      </Button>
     );
   };
 
@@ -289,7 +345,7 @@ const SettingsUsers: FC = () => {
             )
               return;
             setPagination(state);
-            updatePageSize.mutate({page_results: state.pageSize});
+            updatePageSize.mutate({ page_results: state.pageSize });
             getUsers(state, sorting, columnFilters);
           }}
           sorting={sorting}
@@ -300,7 +356,9 @@ const SettingsUsers: FC = () => {
           setFiltering={(state: ColumnFiltersState) => {
             setColumnFilters(state);
             const searchfilters = checkFilters(state);
-            const hasData = Object.values(searchfilters).some((value) => value !== '');
+            const hasData = Object.values(searchfilters).some(
+              (value) => value !== ''
+            );
 
             if (hasData) {
               const intialPagination = { pageIndex: 0, pageSize: 10 };
@@ -314,19 +372,54 @@ const SettingsUsers: FC = () => {
         />
       </Card>
 
-      {
-        newUserModal && <UserModal onClose={() => {
-          setNewUserModal(false);
-          getUsers(pagination, sorting, columnFilters);
-        }} />
-      }
+      {newUserModal && (
+        <UserModal
+          onClose={() => {
+            setNewUserModal(false);
+            getUsers(pagination, sorting, columnFilters);
+          }}
+        />
+      )}
 
-      {
-        editableRow && <UserModal user={editableRow} onClose={() => {
-          setEditableRow(null);
-          getUsers(pagination, sorting, columnFilters);
-        }} />
-      }
+      {changeStatusDialog && (
+        <Dialog
+          title={t('settings.users.userChangeStatusMessage')}
+          onClose={() => setChangeStatusDialog(false)}
+          footer={
+            <>
+              <Button
+                appearance="secondary"
+                onClick={() => setChangeStatusDialog(false)}
+              >
+                {t('global.no')}
+              </Button>
+              <Button
+                appearance="primary"
+                onClick={() => {
+                  customerSupportActivityMutation.mutate({
+                    customerSupportActive: false,
+                    customerSupportStatus: 'offline',
+                  });
+                }}
+              >
+                {t('global.yes')}
+              </Button>
+            </>
+          }
+        >
+          <p>{t('global.removeValidation')}</p>
+        </Dialog>
+      )}
+
+      {editableRow && (
+        <UserModal
+          user={editableRow}
+          onClose={() => {
+            setEditableRow(null);
+            getUsers(pagination, sorting, columnFilters);
+          }}
+        />
+      )}
 
       {deletableRow !== null && (
         <Dialog
