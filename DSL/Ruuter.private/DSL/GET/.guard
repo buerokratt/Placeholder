@@ -11,7 +11,7 @@ process_request:
 verify_header_nonce:
   call: http.post
   args:
-    url: "[#TRAINING_RESQL]/use-nonce"
+    url: "[#CHATBOT_RESQL]/use-nonce"
     body:
       updated_nonce: ${incoming.headers['x-ruuter-nonce']}
   result: nonce_response
@@ -20,7 +20,7 @@ verify_header_nonce:
 verify_param_nonce:
   call: http.post
   args:
-    url: "[#TRAINING_RESQL]/use-nonce"
+    url: "[#CHATBOT_RESQL]/use-nonce"
     body:
       updated_nonce: ${incoming.params['ruuter-nonce']}
   result: nonce_response

@@ -11,10 +11,25 @@ export interface User {
   csaEmail: string;
   authorities: ROLES[];
   customerSupportStatus: 'online' | 'idle' | 'offline';
+  department: string;
+  jiraAccountId?: string;
 }
 
-export interface UserDTO extends Pick<User, 'login' | 'firstName' | 'lastName' | 'fullName' | 'idCode' | 'authorities' | 'displayName' | 'csaTitle' | 'csaEmail'> {
-}
+export interface UserDTO
+  extends Pick<
+    User,
+    | 'login'
+    | 'firstName'
+    | 'lastName'
+    | 'fullName'
+    | 'idCode'
+    | 'authorities'
+    | 'displayName'
+    | 'csaTitle'
+    | 'csaEmail'
+    | 'department'
+    | 'jiraAccountId'
+  > {}
 
 export interface UserSearchFilters {
   search_full_name: string;
@@ -23,4 +38,5 @@ export interface UserSearchFilters {
   search_csa_title: string;
   search_csa_email: string;
   search_authority: string;
+  search_department: string;
 }

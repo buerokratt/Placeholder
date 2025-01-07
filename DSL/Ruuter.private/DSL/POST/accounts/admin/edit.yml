@@ -29,6 +29,15 @@ declaration:
       - field: userIdCode
         type: string
         description: "Body field 'userIdCode'"
+      - field: department
+        type: string
+        description: "Body field 'department'"
+      - field: jiraAccountId
+        type: string
+        description: "Body field 'jiraAccountId'"
+      - field: jiraConnectDisconnect
+        type: boolean
+        description: "Body field 'jiraConnectDisconnect'"
 
 extractRequestData:
   assign:
@@ -39,6 +48,8 @@ extractRequestData:
     csaTitle: ${incoming.body.csaTitle}
     csa_email: ${incoming.body.csa_email}
     roles: ${incoming.body.roles}
+    department: ${incoming.body.department}
+    jira_account_id: ${incoming.body.jiraAccountId}
  
 getUser:
   call: http.post
@@ -52,8 +63,54 @@ getUser:
 checkIfUserExists:
   switch:
     - condition: "${res.response.body.length > 0}"
-      next: updateUser
+      next: checkJiraConnectDisconnect
   next: return_not_exists
+
+checkJiraConnectDisconnect:
+  switch:
+    - condition: ${incoming.body.jiraConnectDisconnect && !incoming.body.jiraAccountId.length}
+      # connect jira
+      next: getAuthHeader
+    - condition: ${incoming.body.jiraConnectDisconnect && incoming.body.jiraAccountId.length > 0}
+      # disconnect jira
+      next: removeJiraAccountId
+  next: updateUser
+
+getAuthHeader:
+  call: http.post
+  args:
+    url: "[#CHATBOT_DMAPPER]/hbs/chat-bot/get_auth_header"
+    headers:
+      type: json
+    body:
+      username: "[#JIRA_USERNAME]"
+      token: "[#JIRA_API_TOKEN]"
+  result: auth_header
+
+getJiraAccountId:
+  call: http.get
+  args:
+    url: "[#JIRA_CLOUD_DOMAIN]/rest/api/3/user/search?maxResults=1&query=${csa_email}"
+    headers:
+      Authorization: ${auth_header.response.body.val}
+      Accept: "application/json"
+      Content-Type: "application/json"
+  result: jira_user_res
+
+checkJiraUserRes:
+  switch:
+    - condition: ${jira_user_res.response.body[0]?.emailAddress === csa_email}
+      next: assignJiraAccountId
+  next: updateUser
+
+assignJiraAccountId:
+  assign:
+    jira_account_id: ${jira_user_res.response.body[0].accountId}
+  next: updateUser
+
+removeJiraAccountId:
+  assign:
+    jira_account_id: ""
 
 updateUser:
   call: http.post
@@ -68,6 +125,8 @@ updateUser:
       displayName: ${displayName}
       csaTitle: ${csaTitle}
       csaEmail: ${csa_email}
+      department: ${department}
+      jiraAccountId: ${jira_account_id ?? ""}
   result: add_user_res
   next: updateRoles
 

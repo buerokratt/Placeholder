@@ -35,6 +35,8 @@ const UserModal: FC<UserModalProps> = ({ onClose, user }) => {
       csaTitle: user?.csaTitle,
       csaEmail: user?.csaEmail,
       fullName: user?.fullName,
+      department: user?.department,
+      jiraAccountId: user?.jiraAccountId,
     },
   });
 
@@ -85,10 +87,12 @@ const UserModal: FC<UserModalProps> = ({ onClose, user }) => {
     mutationFn: ({
       id,
       userData,
+      jiraConnectDisconnect = false,
     }: {
       id: string | number;
       userData: UserDTO;
-    }) => editUser(id, userData),
+      jiraConnectDisconnect?: boolean;
+    }) => editUser(id, userData, jiraConnectDisconnect),
     onSuccess: async () => {
       await queryClient.invalidateQueries([
         'accounts/customer-support-agents',
@@ -145,6 +149,18 @@ const UserModal: FC<UserModalProps> = ({ onClose, user }) => {
     }
   });
 
+  const handleJiraConnection = handleSubmit((data) => {
+    if (user) {
+      userEditMutation.mutate({
+        id: user.idCode,
+        userData: data,
+        jiraConnectDisconnect: true,
+      });
+    } else {
+      checkIfUserExistsMutation.mutate({ userData: data });
+    }
+  });
+
   const requiredText = t('settings.users.required') ?? '*';
 
   return (
@@ -156,6 +172,13 @@ const UserModal: FC<UserModalProps> = ({ onClose, user }) => {
           <Button appearance="secondary" onClick={onClose}>
             {t('global.cancel')}
           </Button>
+          {user && (
+            <Button onClick={handleJiraConnection}>
+              {user.jiraAccountId
+                ? t('settings.users.disconnectFromJira')
+                : t('settings.users.connectToJira')}
+            </Button>
+          )}
           <Button onClick={handleUserSubmit}>
             {user ? t('settings.users.editUser') : t('settings.users.addUser')}
           </Button>
@@ -268,6 +291,11 @@ const UserModal: FC<UserModalProps> = ({ onClose, user }) => {
             {errors.csaEmail.message}
           </span>
         )}
+
+        <FormInput
+          {...register('department')}
+          label={t('settings.users.department')}
+        />
       </Track>
     </Dialog>
   );

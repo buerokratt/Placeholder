@@ -1,0 +1,4 @@
+create_jira_issue_now:
+  trigger: "0 0 0/1 * * ?"
+  type: exec
+  command: "./scripts/create_jira_issue.sh"

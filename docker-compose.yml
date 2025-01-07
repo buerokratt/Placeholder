@@ -48,7 +48,7 @@ services:
       - application.logging.printStackTrace=true
       - application.internalRequests.disabled=true
       - server.port=8088
-      - application.externalAuthAllowed=/cron-tasks/delete-conversations
+      - application.externalAuthAllowed=/cron-tasks/delete-conversations,jira/chats/sync
     volumes:
       - ./DSL/Ruuter.private/DSL:/DSL
       - ./constants.ini:/app/constants.ini

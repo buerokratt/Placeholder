@@ -1,18 +1,24 @@
-import {FC, useEffect, useMemo, useState} from 'react';
-import {useTranslation} from 'react-i18next';
-import {useMutation} from '@tanstack/react-query';
-import {ColumnFiltersState, createColumnHelper, PaginationState, Row, SortingState,} from '@tanstack/react-table';
-import {AxiosError} from 'axios';
-import {MdOutlineDeleteOutline, MdOutlineEdit} from 'react-icons/md';
-import {apiDev} from 'services/api';
-import {Button, Card, DataTable, Dialog, Icon, Track} from 'components';
-import {User, UserSearchFilters} from 'types/user';
-import {deleteUser} from 'services/users';
-import {useToast} from 'hooks/useToast';
+import { FC, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useMutation } from '@tanstack/react-query';
+import {
+  ColumnFiltersState,
+  createColumnHelper,
+  PaginationState,
+  Row,
+  SortingState,
+} from '@tanstack/react-table';
+import { AxiosError } from 'axios';
+import { MdOutlineDeleteOutline, MdOutlineEdit } from 'react-icons/md';
+import { apiDev } from 'services/api';
+import { Button, Card, DataTable, Dialog, Icon, Track } from 'components';
+import { User, UserSearchFilters } from 'types/user';
+import { deleteUser } from 'services/users';
+import { useToast } from 'hooks/useToast';
 import UserModal from './UserModal';
-import {ROLES} from 'utils/constants';
+import { ROLES } from 'utils/constants';
 import withAuthorization from 'hoc/with-authorization';
-import useStore from "../../../store";
+import useStore from '../../../store';
 
 const SettingsUsers: FC = () => {
   const { t } = useTranslation();
@@ -26,7 +32,12 @@ const SettingsUsers: FC = () => {
   const [usersList, setUsersList] = useState<User[] | null>(null);
   const [totalPages, setTotalPages] = useState<number>(1);
 
-  const getUsers = (pagination: PaginationState, sorting: SortingState, columnFilters: ColumnFiltersState, setTablePagination: boolean = false) => {
+  const getUsers = (
+    pagination: PaginationState,
+    sorting: SortingState,
+    columnFilters: ColumnFiltersState,
+    setTablePagination: boolean = false
+  ) => {
     const sort =
       sorting.length === 0
         ? 'name asc'
@@ -43,6 +54,7 @@ const SettingsUsers: FC = () => {
         search_csa_title: searchfilters.search_csa_title,
         search_csa_email: searchfilters.search_csa_email,
         search_authority: searchfilters.search_authority,
+        search_department: searchfilters.search_department,
       })
       .then((res: any) => {
         setUsersList(res?.data?.response ?? []);
@@ -55,12 +67,12 @@ const SettingsUsers: FC = () => {
   };
 
   useEffect(() => {
-      getUsers(pagination, sorting, columnFilters);
+    getUsers(pagination, sorting, columnFilters);
   }, []);
 
-    useEffect(() => {
-        fetchData()
-    }, [userInfo?.idCode]);
+  useEffect(() => {
+    fetchData();
+  }, [userInfo?.idCode]);
 
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -70,38 +82,39 @@ const SettingsUsers: FC = () => {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const columnHelper = createColumnHelper<User>();
 
-    const fetchData = async () => {
-        try {
-            const response = await apiDev.get('/accounts/get-page-preference', {
-                params: {user_id: userInfo?.idCode, page_name: window.location.pathname},
-            });
-            if (response.data.pageResults !== undefined) {
-                updatePagePreference(response.data.pageResults)
-            } else {
-                getUsers(pagination, sorting, columnFilters);
-            }
-        } catch (err) {
-            console.error('Failed to fetch data');
-        }
-    };
-
-    const updatePagePreference = (pageResults: number): void => {
-        const updatedPagination = { ...pagination, pageSize: pageResults };
-        setPagination(updatedPagination);
-        getUsers(updatedPagination, sorting, columnFilters);
+  const fetchData = async () => {
+    try {
+      const response = await apiDev.get('/accounts/get-page-preference', {
+        params: {
+          user_id: userInfo?.idCode,
+          page_name: window.location.pathname,
+        },
+      });
+      if (response.data.pageResults !== undefined) {
+        updatePagePreference(response.data.pageResults);
+      } else {
+        getUsers(pagination, sorting, columnFilters);
+      }
+    } catch (err) {
+      console.error('Failed to fetch data');
     }
+  };
 
-    const updatePageSize = useMutation({
-        mutationFn: (data: {
-            page_results: number;
-        }) => {
-            return apiDev.post('accounts/update-page-preference', {
-                user_id: userInfo?.idCode,
-                page_name: window.location.pathname,
-                page_results: data.page_results,
-            });
-        }
-    });
+  const updatePagePreference = (pageResults: number): void => {
+    const updatedPagination = { ...pagination, pageSize: pageResults };
+    setPagination(updatedPagination);
+    getUsers(updatedPagination, sorting, columnFilters);
+  };
+
+  const updatePageSize = useMutation({
+    mutationFn: (data: { page_results: number }) => {
+      return apiDev.post('accounts/update-page-preference', {
+        user_id: userInfo?.idCode,
+        page_name: window.location.pathname,
+        page_results: data.page_results,
+      });
+    },
+  });
 
   const deleteUserMutation = useMutation({
     mutationFn: ({ id }: { id: string | number }) => deleteUser(id),
@@ -151,33 +164,37 @@ const SettingsUsers: FC = () => {
       search_csa_title: '',
       search_csa_email: '',
       search_authority: '',
+      search_department: '',
     };
-     for (const filter of state) {
-       switch (filter.id) {
-         case 'name':
-           searchfilters.search_full_name = (filter.value as string) ?? '';
-           break;
-         case 'idCode':
-           searchfilters.search_id_code = (filter.value as string) ?? '';
-           break;
-         case 'displayName':
-           searchfilters.search_display_name = (filter.value as string) ?? '';
-           break;
-         case 'csaTitle':
-           searchfilters.search_csa_title = (filter.value as string) ?? '';
-           break;
-         case 'csaEmail':
-           searchfilters.search_csa_email = (filter.value as string) ?? '';
-           break;
-         case 'Role':
-           searchfilters.search_authority = (filter.value as string) ?? '';
-           break;
-         default:
-           break;
-       }
-     }
-     return searchfilters;
-  }
+    for (const filter of state) {
+      switch (filter.id) {
+        case 'name':
+          searchfilters.search_full_name = (filter.value as string) ?? '';
+          break;
+        case 'idCode':
+          searchfilters.search_id_code = (filter.value as string) ?? '';
+          break;
+        case 'displayName':
+          searchfilters.search_display_name = (filter.value as string) ?? '';
+          break;
+        case 'csaTitle':
+          searchfilters.search_csa_title = (filter.value as string) ?? '';
+          break;
+        case 'csaEmail':
+          searchfilters.search_csa_email = (filter.value as string) ?? '';
+          break;
+        case 'Role':
+          searchfilters.search_authority = (filter.value as string) ?? '';
+          break;
+        case 'department':
+          searchfilters.search_department = (filter.value as string) ?? '';
+          break;
+        default:
+          break;
+      }
+    }
+    return searchfilters;
+  };
 
   const customerSupportStatusView = (props: any) => {
     const isIdle = props.getValue() === 'idle' ? '#FFB511' : '#D73E3E';
@@ -245,6 +262,14 @@ const SettingsUsers: FC = () => {
       columnHelper.accessor('csaEmail', {
         header: t('settings.users.email') ?? '',
       }),
+      columnHelper.accessor('department', {
+        header: t('settings.users.department') ?? '',
+      }),
+      columnHelper.accessor('jiraAccountId', {
+        header: t('settings.users.connectedToJira') ?? '',
+        enableColumnFilter: false,
+        cell: (props) => (props.getValue() ? t('global.yes') : t('global.no')),
+      }),
       columnHelper.display({
         id: 'edit',
         cell: editView,
@@ -289,7 +314,7 @@ const SettingsUsers: FC = () => {
             )
               return;
             setPagination(state);
-            updatePageSize.mutate({page_results: state.pageSize});
+            updatePageSize.mutate({ page_results: state.pageSize });
             getUsers(state, sorting, columnFilters);
           }}
           sorting={sorting}
@@ -300,7 +325,9 @@ const SettingsUsers: FC = () => {
           setFiltering={(state: ColumnFiltersState) => {
             setColumnFilters(state);
             const searchfilters = checkFilters(state);
-            const hasData = Object.values(searchfilters).some((value) => value !== '');
+            const hasData = Object.values(searchfilters).some(
+              (value) => value !== ''
+            );
 
             if (hasData) {
               const intialPagination = { pageIndex: 0, pageSize: 10 };
@@ -314,19 +341,24 @@ const SettingsUsers: FC = () => {
         />
       </Card>
 
-      {
-        newUserModal && <UserModal onClose={() => {
-          setNewUserModal(false);
-          getUsers(pagination, sorting, columnFilters);
-        }} />
-      }
+      {newUserModal && (
+        <UserModal
+          onClose={() => {
+            setNewUserModal(false);
+            getUsers(pagination, sorting, columnFilters);
+          }}
+        />
+      )}
 
-      {
-        editableRow && <UserModal user={editableRow} onClose={() => {
-          setEditableRow(null);
-          getUsers(pagination, sorting, columnFilters);
-        }} />
-      }
+      {editableRow && (
+        <UserModal
+          user={editableRow}
+          onClose={() => {
+            setEditableRow(null);
+            getUsers(pagination, sorting, columnFilters);
+          }}
+        />
+      )}
 
       {deletableRow !== null && (
         <Dialog

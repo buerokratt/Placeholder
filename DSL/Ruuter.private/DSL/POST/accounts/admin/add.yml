@@ -29,6 +29,9 @@ declaration:
       - field: userIdCode
         type: string
         description: "Body field 'userIdCode'"
+      - field: department
+        type: string
+        description: "Body field 'department'"
 
 extractRequestData:
   assign:
@@ -39,6 +42,7 @@ extractRequestData:
     csaTitle: ${incoming.body.csaTitle}
     csa_email: ${incoming.body.csa_email}
     roles: ${incoming.body.roles}
+    department: ${incoming.body.department}
 
 getUser:
   call: http.post
@@ -68,6 +72,7 @@ addUser:
       displayName: ${displayName}
       csaTitle: ${csaTitle}
       csaEmail: ${csa_email}
+      department: ${department}
   result: add_user_res
   next: addRoles
 
