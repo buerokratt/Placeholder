@@ -1,0 +1,113 @@
+prepareRequest:
+  assign:
+    order: "-occurredAt"
+    distinct: "initiativeId"
+    limit: "5"
+    acceptHeader: "application/vnd.rahvaalgatus.initiative-event+json; v=1"
+  next: makeAPIRequest
+
+makeAPIRequest:
+  call: http.get
+  args:
+    url: "https://rahvaalgatus.ee/initiative-events"
+    query:
+      order: ${order}
+      distinct: ${distinct}
+      limit: ${limit}
+    headers:
+      accept: ${acceptHeader}
+  result: eventsData
+  error: returnError
+  next: extractInitiativeIds
+
+extractInitiativeIds:
+  assign:
+    initiativeIds: ${eventsData.response.body.map(event => event.initiativeId)}
+  next: getFirstInitiativeDetails
+
+getFirstInitiativeDetails:
+  call: http.get
+  args:
+    url: "https://rahvaalgatus.ee/initiatives/${initiativeIds[0]}"
+    headers:
+      accept: "application/vnd.rahvaalgatus.initiative+json; v=1"
+  result: firstInitiativeData
+  error: returnError
+  next: getSecondInitiativeDetails
+
+getSecondInitiativeDetails:
+  call: http.get
+  args:
+    url: "https://rahvaalgatus.ee/initiatives/${initiativeIds[1]}"
+    headers:
+      accept: "application/vnd.rahvaalgatus.initiative+json; v=1"
+  result: secondInitiativeData
+  error: returnError
+  next: getThirdInitiativeDetails
+
+getThirdInitiativeDetails:
+  call: http.get
+  args:
+    url: "https://rahvaalgatus.ee/initiatives/${initiativeIds[2]}"
+    headers:
+      accept: "application/vnd.rahvaalgatus.initiative+json; v=1"
+  result: thirdInitiativeData
+  error: returnError
+  next: getFourthInitiativeDetails
+
+getFourthInitiativeDetails:
+  call: http.get
+  args:
+    url: "https://rahvaalgatus.ee/initiatives/${initiativeIds[3]}"
+    headers:
+      accept: "application/vnd.rahvaalgatus.initiative+json; v=1"
+  result: fourthInitiativeData
+  error: returnError
+  next: getFifthInitiativeDetails
+
+getFifthInitiativeDetails:
+  call: http.get
+  args:
+    url: "https://rahvaalgatus.ee/initiatives/${initiativeIds[4]}"
+    headers:
+      accept: "application/vnd.rahvaalgatus.initiative+json; v=1"
+  result: fifthInitiativeData
+  error: returnError
+  next: formatResponse
+
+formatResponse:
+  assign:
+    details: |
+      Pealkiri - ${firstInitiativeData.response.body.title}
+      Faas - ${firstInitiativeData.response.body.phase}
+      Allkirjade arv - ${firstInitiativeData.response.body.signatureCount}
+      vajalik allkirjade arv - ${firstInitiativeData.response.body.signatureThreshold}
+
+      Pealkiri - ${secondInitiativeData.response.body.title}
+      Faas - ${secondInitiativeData.response.body.phase}
+      Allkirjade arv - ${secondInitiativeData.response.body.signatureCount}
+      vajalik allkirjade arv - ${secondInitiativeData.response.body.signatureThreshold}
+
+      Pealkiri - ${thirdInitiativeData.response.body.title}
+      Faas - ${thirdInitiativeData.response.body.phase}
+      Allkirjade arv - ${thirdInitiativeData.response.body.signatureCount}
+      vajalik allkirjade arv - ${thirdInitiativeData.response.body.signatureThreshold}
+
+      Pealkiri - ${fourthInitiativeData.response.body.title}
+      Faas - ${fourthInitiativeData.response.body.phase}
+      Allkirjade arv - ${fourthInitiativeData.response.body.signatureCount}
+      vajalik allkirjade arv - ${fourthInitiativeData.response.body.signatureThreshold}
+
+      Pealkiri - ${fifthInitiativeData.response.body.title}
+      Faas - ${fifthInitiativeData.response.body.phase}
+      Allkirjade arv - ${fifthInitiativeData.response.body.signatureCount}
+      vajalik allkirjade arv - ${fifthInitiativeData.response.body.signatureThreshold}
+  next: returnResult
+
+returnResult:
+  return: ${"Viimased viis rahvaalgatust. " + details}
+  next: end
+
+returnError:
+  return: "Error: failed to get initiative details."
+  next: end

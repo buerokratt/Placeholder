@@ -1,0 +1,32 @@
+getMessageDateTime:
+  call: http.get
+  args:
+    url: http://worldtimeapi.org/api/timezone/Europe/Tallinn
+  result: timeObject
+
+step_1:
+  assign:
+    dateTimeNow: ${timeObject.response.body.datetime}
+    tallinnOffset: ${(timeObject.response.body.dst_offset + timeObject.response.body.raw_offset)}
+    prevDate: ${new Date(new Date(dateTimeNow).getTime() - 24*60*60*1000).toISOString().substr(0, 10)}
+    date: ${dateTimeNow.substr(0, 10)}
+    startDateTime: ${prevDate + "T21:00:00.000Z"}
+    endDateTime: ${date + "T20:59:59.999Z"}
+
+getMessageElering:
+  call: http.get
+  args:
+    url: https://dashboard.elering.ee/api/nps/price
+    query:
+      start: ${startDateTime}
+      end: ${endDateTime}
+  result: eleringToday
+
+step_3:
+  assign:
+    maxPrice: ${(eleringToday.response.body.data.ee.sort( (a,b) =>  a.price-b.price )[eleringToday.response.body.data.ee.length - 1]).price}
+    maxPriceTimestamp: ${(eleringToday.response.body.data.ee.sort( (a,b) =>  a.price-b.price )[eleringToday.response.body.data.ee.length - 1]).timestamp + tallinnOffset}
+    timeVar: ${new Date(maxPriceTimestamp * 1000).getHours() + ":00"}
+
+response:
+  return: ${"Täna on Nordpool elektribörsi kõrgeim hind kell " + timeVar  + " ja selleks on " + maxPrice + " EUR/MWh."}

@@ -1,0 +1,40 @@
+variables_step:
+  assign:
+    year: ${new Date().getFullYear().toString()}
+
+post_step:
+  call: http.post
+  args:
+    url: https://andmed.stat.ee/api/v1/et/stat/LE27
+    body:
+      query:
+        - code: "Näitaja"
+          selection:
+            filter: "item"
+            values:
+              - "1"
+        - code: "Aasta"
+          selection:
+            filter: "item"
+            values:
+              - ${year}
+      response:
+        format: "json-stat2"
+  result: subsidence
+  next: check_results
+
+check_results:
+  switch:
+    - condition: ${subsidence.response.body.value === undefined}
+      next: try_second_month_step
+    - condition: ${subsidence.response.body.value[0] != undefined}
+      next: success_step
+
+success_step:
+  return: ${"Viimati avaldas statistikaamet arvestusliku elatusmiinimumi 2023. aasta kohta ja see oli " + subsidence.response.body.value[0] + " eurot."}
+  next: end
+
+try_second_month_step:
+  assign:
+    year: ${year - 1}
+  next: post_step
