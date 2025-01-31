@@ -1,0 +1,61 @@
+declaration:
+  call: declare
+  version: 0.1
+  description: "Sync chat to SMAX"
+  method: get
+  accepts: json
+  returns: json
+  namespace: backoffice
+
+getLastSynchronization:
+  call: http.post
+  maxRecursions: 5
+  args:
+    url: "[#CHATBOT_RESQL]/get-smax-synchronization"
+  result: synchronization
+
+getNextChatForSynchronization:
+  call: http.post
+  maxRecursions: 5
+  args:
+    url: "[#CHATBOT_RESQL]/get-smax-chat"
+    body:
+      chatBaseId: ${synchronization.response.body[0]?.chatBaseId ?? ""}
+  result: chat
+
+checkIfChatExists:
+  switch:
+    - condition: "${chat.response.body.length > 0}"
+      next: getChatMessagesForSynchronization
+  next: return_not_found
+
+getChatMessagesForSynchronization:
+  call: http.post
+  maxRecursions: 5
+  args:
+    url: "[#CHATBOT_RESQL]/get-smax-chat-messages"
+    body:
+      chatBaseId: ${chat.response.body[0]?.baseId ?? ""}
+  result: messages
+
+# ------------------------------
+# TODO: Implement synchronization to SMAX - requires SMAX API access and documentation
+# ------------------------------
+
+createSynchronization:
+  call: http.post
+  maxRecursions: 5
+  args:
+    url: "[#CHATBOT_RESQL]/insert-chat-smax-synchronization"
+    body:
+      chatBaseId: ${chat.response.body[0]?.baseId ?? ""}
+  result: res
+  next: getLastSynchronization
+
+return_result:
+  return: ${chat.response.body}
+  next: end
+
+return_not_found:
+  return: "error: not found"
+  next: end
