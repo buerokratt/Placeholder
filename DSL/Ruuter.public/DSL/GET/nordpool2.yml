@@ -1,0 +1,32 @@
+getMessageDateTime:
+  call: http.get
+  args:
+    url: http://worldtimeapi.org/api/timezone/Europe/Tallinn
+  result: timeObject
+
+step_1:
+  assign:
+    dateTimeNow: ${timeObject.response.body.datetime}
+    tallinnOffset: ${(timeObject.response.body.dst_offset + timeObject.response.body.raw_offset)}
+    prevDate: ${new Date(new Date(dateTimeNow).getTime() - 24*60*60*1000).toISOString().substr(0, 10)}
+    date: ${dateTimeNow.substr(0, 10)}
+    startDateTime: ${prevDate + "T21:00:00.000Z"}
+    endDateTime: ${date + "T20:59:59.999Z"}
+
+getMessageElering:
+  call: http.get
+  args:
+    url: https://dashboard.elering.ee/api/nps/price
+    query:
+      start: ${startDateTime}
+      end: ${endDateTime}
+  result: eleringToday
+
+step_3:
+  assign:
+    minPrice: ${(eleringToday.response.body.data.ee.sort( (a,b) =>  a.price-b.price )[0]).price}
+    minPriceTimestamp: ${(eleringToday.response.body.data.ee.sort( (a,b) =>  a.price-b.price )[0]).timestamp + tallinnOffset}
+    timeVar: ${new Date(minPriceTimestamp * 1000).getHours() + ":00"}
+
+response:
+  return: ${"Täna on Nordpool elektribörsi odavaim tunnihind kell " + timeVar + " ja selleks on " + minPrice + " €/MWh. Börsipaketiga kliendi jaoks koosneb arvel nähtav elektri hind tarbimise hetke börsihinnast koos käibemaksuga ning sellele lisanduvast marginaalist, mis katab elektrimüüja riskid ja tegutsemiskulud. Hinnale lisanduvad veel võrgutasu ja riiklikud maksud (taastuvenergia ja elektriaktsiis)."}

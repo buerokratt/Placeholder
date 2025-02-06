@@ -1,0 +1,80 @@
+variables_step:
+  assign:
+    year: ${new Date().getFullYear().toString()}
+    month: ${(new Date().getMonth() + 1).toString()}
+    attempts: 0
+
+post_step:
+  call: http.post
+  args:
+    url: https://andmed.stat.ee/api/v1/en/stat/IA021
+    body:
+      query:
+        - code: "Aasta"
+          selection:
+            filter: "item"
+            values:
+              - ${year}
+        - code: "Kuu"
+          selection:
+            filter: "item"
+            values:
+              - ${month}
+      response:
+        format: "json-stat2"
+  result: statistics
+  next: check_results
+
+check_results:
+  switch:
+    - condition: ${attempts > 12}
+      next: force_end_step
+    - condition: ${statistics.response.body.value[0] == null}
+      next: try_second_month_step
+    - condition: ${statistics.response.body.value[0] != null}
+      next: success_step
+
+try_second_month_step:
+  switch:
+    - condition: ${month == "1"}
+      next: december_step
+    - condition: ${month != "1"}
+      next: subtraction_step
+
+december_step:
+  assign:
+    month: 12
+    year: ${year - 1}
+    attempts: ${attempts + 1}
+  next: post_step
+
+subtraction_step:
+  assign:
+    month: ${month - 1}
+    attempts: ${attempts + 1}
+  next: post_step
+
+success_step:
+  assign:
+    same_month: ${statistics.response.body.value[0]}
+    last_month: ${statistics.response.body.value[1]}
+  next: switch_step
+
+switch_step:
+  switch:
+    - condition: ${attempts === 0}
+      next: return_success
+    - condition: ${attempts > 0}
+      next: return_fail
+
+force_end_step:
+  return: ${"Andmeid ei leitud."}
+  next: end
+
+return_success:
+  return: ${"Kuu " + month + " tarbijahinnaindeksi muutus võrreldes eelmise aasta sama kuuga on " + same_month + "%. Tarbijahinnaindeksi muutus võrreldes eelmise kuuga on " + last_month + "%."}
+  next: end
+
+return_fail:
+  return: ${"Antud kuu kohta andmeid veel avalikustatud ei ole. Viimased andmed avalikustati " + month + "." + year + ", mil tarbijahinnaindeksi muutus võrreldes eelmise aasta sama kuuga oli " + same_month + "%. Tarbijahinnaindeksi muutus võrreldes sellele eelneva kuuga oli " + last_month + "%."}
+  next: end

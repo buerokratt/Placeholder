@@ -1,0 +1,232 @@
+checkservice:
+  switch:
+    - condition: ${incoming.body.list[0] === "#laborMarket"}
+      next: laborMarket
+    - condition: ${incoming.body.list[0] === "#estimatedSubsidence"}
+      next: estimatedSubsidence
+    - condition: ${incoming.body.list[0] === "#priceIndex"}
+      next: priceIndex
+    - condition: ${incoming.body.list[0] === "#nordpool"}
+      next: nordpoolService
+    - condition: ${incoming.body.list[0] === "#nordpool2"}
+      next: nordpool2Service
+    - condition: ${incoming.body.list[0] === "#nordpool3"}
+      next: nordpool3Service
+    - condition: ${incoming.body.list[0] === "#rahvaAlgatus"}
+      next: initiativeEvents
+    - condition: ${incoming.body.list[0] === "#rahvaAlgatusPopulaarne"}
+      next: initiativeEventsPopular
+    - condition: ${incoming.body.list[0] === "#riigikoguIsikuKohalolu"}
+      next: riigikoguAttendance
+    - condition: ${incoming.body.list[0] === "#recentVoting"}
+      next: riigikoguRecentVoting
+    - condition: ${incoming.body.list[0] == null}
+      next: noService
+  next: noService
+
+laborMarket:
+  call: http.get
+  args:
+    url: "[#CHATBOT_RUUTER_PUBLIC]/labour-market-headline-indicators"
+  result: laborMarketRequest
+  next: laborMarketAnswer
+laborMarketAnswer:
+  call: http.post
+  args:
+    url: "[#CHATBOT_RESQL]/service-post"
+    body:
+      serviceContent: "${laborMarketRequest.response.body.response}"
+      chatId: ${incoming.body.chatId}
+      authorId: ${incoming.body.authorId}
+      authorFirstName: ${incoming.body.authorFirstName}
+      authorLastName: ""
+      authorTimestamp: ${incoming.body.authorTimestamp}
+      created: ${incoming.body.created}
+  next: end
+
+estimatedSubsidence:
+  call: http.get
+  args:
+    url: "[#CHATBOT_RUUTER_PUBLIC]/estimated-subsidence-minimum"
+  result: estimatedSubsidenceRequest
+  next: estimatedSubsidenceAnswer
+estimatedSubsidenceAnswer:
+  call: http.post
+  args:
+    url: "[#CHATBOT_RESQL]/service-post"
+    body:
+      serviceContent: "${estimatedSubsidenceRequest.response.body.response}"
+      chatId: ${incoming.body.chatId}
+      authorId: ${incoming.body.authorId}
+      authorFirstName: ${incoming.body.authorFirstName}
+      authorLastName: ""
+      authorTimestamp: ${incoming.body.authorTimestamp}
+      created: ${incoming.body.created}
+  next: end
+
+priceIndex:
+  call: http.get
+  args:
+    url: "[#CHATBOT_RUUTER_PUBLIC]/price-index-per-month"
+  result: priceIndexRequest
+  next: priceIndexAnswer
+priceIndexAnswer:
+  call: http.post
+  args:
+    url: "[#CHATBOT_RESQL]/service-post"
+    body:
+      serviceContent: "${priceIndexRequest.response.body.response}"
+      chatId: ${incoming.body.chatId}
+      authorId: ${incoming.body.authorId}
+      authorFirstName: ${incoming.body.authorFirstName}
+      authorLastName: ""
+      authorTimestamp: ${incoming.body.authorTimestamp}
+      created: ${incoming.body.created}
+  next: end
+
+nordpoolService:
+  call: http.get
+  args:
+    url: "[#CHATBOT_RUUTER_PUBLIC]/nordpool"
+  result: nordpoolRequest
+  next: nordpoolAnswer
+nordpoolAnswer:
+  call: http.post
+  args:
+    url: "[#CHATBOT_RESQL]/service-post"
+    body:
+      serviceContent: "${nordpoolRequest.response.body.response}"
+      chatId: ${incoming.body.chatId}
+      authorId: ${incoming.body.authorId}
+      authorFirstName: ${incoming.body.authorFirstName}
+      authorLastName: ""
+      authorTimestamp: ${incoming.body.authorTimestamp}
+      created: ${incoming.body.created}
+  next: end
+
+nordpool2Service:
+  call: http.get
+  args:
+    url: "[#CHATBOT_RUUTER_PUBLIC]/nordpool2"
+  result: nordpool2Request
+  next: nordpool2Answer
+nordpool2Answer:
+  call: http.post
+  args:
+    url: "[#CHATBOT_RESQL]/service-post"
+    body:
+      serviceContent: "${nordpool2Request.response.body.response}"
+      chatId: ${incoming.body.chatId}
+      authorId: ${incoming.body.authorId}
+      authorFirstName: ${incoming.body.authorFirstName}
+      authorLastName: ""
+      authorTimestamp: ${incoming.body.authorTimestamp}
+      created: ${incoming.body.created}
+  next: end
+
+nordpool3Service:
+  call: http.get
+  args:
+    url: "[#CHATBOT_RUUTER_PUBLIC]/nordpool3"
+  result: nordpool3Request
+  next: nordpool3Answer
+nordpool3Answer:
+  call: http.post
+  args:
+    url: "[#CHATBOT_RESQL]/service-post"
+    body:
+      serviceContent: "${nordpool3Request.response.body.response}"
+      chatId: ${incoming.body.chatId}
+      authorId: ${incoming.body.authorId}
+      authorFirstName: ${incoming.body.authorFirstName}
+      authorLastName: ""
+      authorTimestamp: ${incoming.body.authorTimestamp}
+      created: ${incoming.body.created}
+  next: end
+
+initiativeEvents:
+  call: http.get
+  args:
+    url: "[#CHATBOT_RUUTER_PUBLIC]/initiative-events"
+  result: initiativeEvents
+  next: initiativeEventsAnswer
+initiativeEventsAnswer:
+  call: http.post
+  args:
+    url: "[#CHATBOT_RESQL]/resql/service-post"
+    body:
+      serviceContent: ${initiativeEvents.response.body.response}
+      chatId: ${incoming.body.chatId}
+      authorId: ${incoming.body.authorId}
+      authorFirstName: ${incoming.body.authorFirstName}
+      authorLastName: ""
+      authorTimestamp: ${incoming.body.authorTimestamp}
+      created: ${incoming.body.created}
+  next: end
+
+initiativeEventsPopular:
+  call: http.get
+  args:
+    url: "[#CHATBOT_RUUTER_PUBLIC]/initiative-events-popular"
+  result: initiativeEventsPopular
+  next: initiativeEventsPopularAnswer
+initiativeEventsPopularAnswer:
+  call: http.post
+  args:
+    url: "[#CHATBOT_RESQL]/resql/service-post"
+    body:
+      serviceContent: ${initiativeEventsPopular.response.body.response}
+      chatId: ${incoming.body.chatId}
+      authorId: ${incoming.body.authorId}
+      authorFirstName: ${incoming.body.authorFirstName}
+      authorLastName: ""
+      authorTimestamp: ${incoming.body.authorTimestamp}
+      created: ${incoming.body.created}
+  next: end
+
+riigikoguAttendance:
+  call: http.post
+  args:
+    url: "[#CHATBOT_RUUTER_PUBLIC]/riigikogu-attendance"
+    body:
+      memberName: ${incoming.body.list[1]}
+  result: riigikoguAttendanceRequest
+  next: riigikoguAttendanceAnswer
+riigikoguAttendanceAnswer:
+  call: http.post
+  args:
+    url: "[#CHATBOT_RESQL]/service-post"
+    body:
+      serviceContent: ${riigikoguAttendanceRequest.response.body.response}
+      chatId: ${incoming.body.chatId}
+      authorId: ${incoming.body.authorId}
+      authorFirstName: ${incoming.body.authorFirstName}
+      authorLastName: ""
+      authorTimestamp: ${incoming.body.authorTimestamp}
+      created: ${incoming.body.created}
+  next: end
+
+riigikoguRecentVoting:
+  call: http.get
+  args:
+    url: "[#CHATBOT_RUUTER_PUBLIC]/riigikogu-recent-voting"
+  result: riigikoguRecentVotingRequest
+  next: riigikoguRecentVotingAnswer
+riigikoguRecentVotingAnswer:
+  call: http.post
+  args:
+    url: "[#CHATBOT_RESQL]/service-post"
+    body:
+      serviceContent: ${riigikoguRecentVotingRequest.response.body.response}
+      chatId: ${incoming.body.chatId}
+      authorId: ${incoming.body.authorId}
+      authorFirstName: ${incoming.body.authorFirstName}
+      authorLastName: ""
+      authorTimestamp: ${incoming.body.authorTimestamp}
+      created: ${incoming.body.created}
+  next: end
+
+noService:
+  return: "${incoming.body.list[0]} , POLE TEENUST"
+  status: 400
+  next: end

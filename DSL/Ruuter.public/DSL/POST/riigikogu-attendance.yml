@@ -1,0 +1,45 @@
+prepareRequest:
+  assign:
+    currentYear: ${new Date().getFullYear()}
+    startDate: ${currentYear + "-01-01"}
+    endDate: ${currentYear + "-12-31"}
+    lang: "ET"
+    memberName: ${incoming.body.membername}
+  next: makeAPIRequest
+
+makeAPIRequest:
+  call: http.get
+  args:
+    url: "https://api.riigikogu.ee/api/statistics/participations/plenary?endDate=${endDate}&startDate=${startDate}&lang=${lang}"
+    query:
+      startDate: ${startDate}
+      endDate: ${endDate}
+      lang: ${lang}
+    headers:
+      accept: "application/json"
+  result: kohaloluData
+  error: returnError
+  next: filterMember
+
+filterMember:
+  assign:
+    memberData: ${kohaloluData.response.body.find(member => member.fullName === memberName)}
+  next: checkMemberExists
+
+checkMemberExists:
+  switch:
+    - condition: ${memberData !== undefined && memberData !== null}
+      next: returnResult
+  next: memberNotFound
+
+returnResult:
+  return: ${memberData.fullName + " on olnud " + currentYear + " aastal kohal " + memberData.participated + " korda ja puudunud " + memberData.absent + " korda."}
+  next: end
+
+memberNotFound:
+  return: "Error: Member not found."
+  next: end
+
+returnError:
+  return: "Error: failed to get participation data."
+  next: end
