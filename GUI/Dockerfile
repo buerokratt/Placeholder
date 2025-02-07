@@ -1,4 +1,4 @@
-ARG nginx_version=nginx:1.25.4-alpine
+ARG nginx_version=nginx:1.27.4-alpine
 
 FROM node:22.0.0-alpine AS image
 WORKDIR /usr/buerokratt-chatbot
