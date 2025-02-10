@@ -5,7 +5,7 @@ RUN npm install --legacy-peer-deps --mode=development
 COPY . .
 RUN ./node_modules/.bin/vite build --mode=development
 
-FROM nginx:1.25.4-alpine
+FROM nginx:1.27.4-alpine
 COPY --from=build /app /usr/share/nginx/html
 #COPY ./nginx/nginx.conf /etc/nginx/conf.d/default.conf
 
