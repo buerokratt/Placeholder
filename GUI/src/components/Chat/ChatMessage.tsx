@@ -154,11 +154,14 @@ const ChatMessage: FC<ChatMessageProps> = ({
             >
               <div>
                 <time
-                  dateTime={message.created}
+                  dateTime={message.created ?? message.authorTimestamp}
                   className="active-chat__message-date"
                   style={{ alignSelf: 'center' }}
                 >
-                  {format(new Date(message.created), 'HH:mm:ss')}
+                  {format(
+                    new Date(message.created ?? message.authorTimestamp),
+                    'HH:mm:ss'
+                  )}
                 </time>
               </div>
               {message.event === CHAT_EVENTS.WAITING_VALIDATION &&

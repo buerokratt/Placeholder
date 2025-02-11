@@ -147,7 +147,9 @@
       "start": "Start",
       "service": "Service",
       "ContactedUser": "Contacted User",
-      "couldNotReachUser": "Could Not Reach User"
+      "couldNotReachUser": "Could Not Reach User",
+      "messageSendingFailed": "Message sending failed!",
+      "sendAgain": "Send again"
     },
     "history": {
       "title": "History",

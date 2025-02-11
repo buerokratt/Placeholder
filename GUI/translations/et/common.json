@@ -147,7 +147,9 @@
       "start": "Alusta",
       "service": "Teenus",
       "ContactedUser": "Kasutajaga ühendust võetud",
-      "couldNotReachUser": "Kasutajaga ei õnnestunud ühendust saada"
+      "couldNotReachUser": "Kasutajaga ei õnnestunud ühendust saada",
+      "messageSendingFailed": "Sõnumi saatmine ebaõnnestus!",
+      "sendAgain": "Saada uuesti"
     },
     "history": {
       "title": "Ajalugu",
