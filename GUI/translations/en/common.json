@@ -346,7 +346,8 @@
       "noticeActive": "Notice active",
       "notice": "Notice",
       "displayPeriod": "Display period",
-      "noticeChanged": "Emergency notice settings changed successfully"
+      "noticeChanged": "Emergency notice settings changed successfully",
+      "endDateError": "End date must be greater than start date"
     },
     "appearance": {
       "title": "Appearance and behavior",

@@ -77,7 +77,7 @@ const ChatHistory: FC = () => {
   const [messagesTrigger, setMessagesTrigger] = useState(false);
   const [selectedColumns, setSelectedColumns] = useState<string[]>([]);
   const [customerSupportAgents, setCustomerSupportAgents] = useState<any[]>([]);
-  const [counterKey, setCounterKey] = useState<number>(0)
+  const [counterKey, setCounterKey] = useState<number>(0);
 
   const { control, watch } = useForm<{
     startDate: Date | string;
@@ -132,12 +132,16 @@ const ChatHistory: FC = () => {
         },
       });
       if (response.data.pageResults !== undefined) {
-        const newSelectedColumns = response.data?.selectedColumns.length === 1 && response.data?.selectedColumns[0] === "" ? [] : response.data?.selectedColumns;
-        setSelectedColumns(newSelectedColumns)
+        const newSelectedColumns =
+          response.data?.selectedColumns.length === 1 &&
+          response.data?.selectedColumns[0] === ''
+            ? []
+            : response.data?.selectedColumns;
+        setSelectedColumns(newSelectedColumns);
         const updatedPagination = updatePagePreference(
           response.data.pageResults ?? 10
         );
-        setCounterKey(counterKey + 1)
+        setCounterKey(counterKey + 1);
         getAllEndedChats.mutate({
           startDate: format(new Date(startDate), 'yyyy-MM-dd'),
           endDate: format(new Date(endDate), 'yyyy-MM-dd'),
@@ -189,7 +193,7 @@ const ChatHistory: FC = () => {
         user_id: userInfo?.idCode,
         page_name: window.location.pathname,
         page_results: data.page_results,
-        selected_columns: `{"${data.selected_columns.join('","')}"}`
+        selected_columns: `{"${data.selected_columns.join('","')}"}`,
       });
     },
   });
@@ -209,7 +213,7 @@ const ChatHistory: FC = () => {
         sortBy = `${sorting[0].id} ${sortType}`;
       }
 
-      console.log('data', data, data.pagination, data.pagination.pageSize)
+      console.log('data', data, data.pagination, data.pagination.pageSize);
 
       return apiDev.post('agents/chats/ended', {
         customerSupportIds: data.customerSupportIds,
@@ -483,8 +487,10 @@ const ChatHistory: FC = () => {
             row.customerSupportId === 'chatbot'
               ? row.customerSupportDisplayName
               : row.customerSupportId
-                ? `${row.customerSupportFirstName ?? ''} ${row.customerSupportLastName ?? ''}`
-                : '-'
+              ? `${row.customerSupportFirstName ?? ''} ${
+                  row.customerSupportLastName ?? ''
+                }`
+              : '-'
           }`,
         {
           id: `customerSupportFullName`,
@@ -705,7 +711,10 @@ const ChatHistory: FC = () => {
               onSelectionChange={(selection) => {
                 const columns = selection?.map((s) => s.value) ?? [];
                 setSelectedColumns(columns);
-                updatePagePreferences.mutate({page_results: pagination.pageSize, selected_columns: columns})
+                updatePagePreferences.mutate({
+                  page_results: pagination.pageSize,
+                  selected_columns: columns,
+                });
               }}
             />
             <FormMultiselect
@@ -760,7 +769,10 @@ const ChatHistory: FC = () => {
                 )
                   return;
                 setPagination(state);
-                updatePagePreferences.mutate({ page_results: state.pageSize, selected_columns: selectedColumns });
+                updatePagePreferences.mutate({
+                  page_results: state.pageSize,
+                  selected_columns: selectedColumns,
+                });
                 getAllEndedChats.mutate({
                   startDate: format(new Date(startDate), 'yyyy-MM-dd'),
                   endDate: format(new Date(endDate), 'yyyy-MM-dd'),

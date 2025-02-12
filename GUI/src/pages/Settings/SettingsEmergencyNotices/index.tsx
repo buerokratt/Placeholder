@@ -84,6 +84,17 @@ const SettingsEmergencyNotices: FC = () => {
   });
 
   const handleFormSubmit = handleSubmit((data) => {
+    const formatDate = (date: Date) => new Date(format(date, 'yyyy-MM-dd'));
+    const startDate = formatDate(new Date(data.emergencyNoticeStartISO));
+    const endDate = formatDate(new Date(data.emergencyNoticeEndISO));
+    if (endDate < startDate) {
+      toast.open({
+        type: 'error',
+        title: t('global.notificationError'),
+        message: t('settings.emergencyNotices.endDateError'),
+      });
+      return;
+    }
     emergencyNoticeMutation.mutate({
       ...data,
       isEmergencyNoticeVisible: isEmergencyNoticeVisible.toString(),

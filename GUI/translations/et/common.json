@@ -346,7 +346,8 @@
       "noticeActive": "Teade aktiivne",
       "notice": "Teade",
       "displayPeriod": "Kuvamisperiood",
-      "noticeChanged": "Teate seadeid muudeti edukalt"
+      "noticeChanged": "Teate seadeid muudeti edukalt",
+      "endDateError": "Lõppkuupäev peab olema alguskuupäevast suurem"
     },
     "appearance": {
       "title": "Välimus ja käitumine",
